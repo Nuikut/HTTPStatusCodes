@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-
 BASE_URL="https://tools-httpstatus.pickup-services.com"
+REQUESTS_COUNT=5
 
 log_info() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') | INFO | $1"
@@ -35,8 +35,8 @@ make_request() {
   local curl_exit_code=$?
 
   if [[ $curl_exit_code -ne 0 ]]; then
-    curl_error "Got error whilst requesting ${url}. curl exit code: ${curl_exit_code}. Message: ${response}"
-    return 1
+    curl_error "Got error whilst requesting. curl exit code: ${curl_exit_code}. Message: ${response}"
+    return 2
   fi
 
   local status_code
@@ -58,14 +58,37 @@ make_request() {
 }
 
 status_codes=(
-100 101 102 103 \
-#200 201 202 203 204 205 206 207 208 226 \
-#300 301 302 303 304 305 306 307 308 \
-#400 401 402 403 404 405 406 407 408 409 410 411 412 413 414 415 416 417 418 421 422 423 424 425 426 428 429 431 451 \
-#500 501 502 503 504 505 506 507 508 510 511 \
-#200 201 300 404 511
+  100 101 102 103 \
+  200 201 202 203 204 205 206 207 208 226 \
+  300 301 302 303 304 305 306 307 308 \
+  400 401 402 403 404 405 406 407 408 409 410 411 412 413 414 415 416 417 418 421 422 423 424 425 426 428 429 431 451 \
+  500 501 502 503 504 505 506 507 508 510 511 \
 )
 
-for status_code in "${status_codes[@]}"; do
-make_request "$status_code"
+has_errors=0
+
+for ((i = 1; i <= REQUESTS_COUNT; i++)); do
+  status_code="${status_codes[$RANDOM % ${#status_codes[@]}]}"
+
+  make_request "$status_code"
+  exit_code=$?
+
+  if [[ $exit_code -eq 1 ]]; then
+    has_errors=1
+  elif [[ $exit_code -eq 2 ]]; then
+    has_errors=2
+  fi
 done
+
+if [[ $has_errors == 1 ]]; then
+  log_error "Script finished with errors"
+  exit 0
+fi
+
+if [[ $has_errors == 2 ]]; then
+  log_error "Script faced fatal errors"
+  exit 1
+fi
+
+log_info "Script finished successfully"
+exit 0

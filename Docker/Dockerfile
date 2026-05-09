@@ -4,7 +4,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certifi
 
 WORKDIR /script
 
-COPY httpcodes.sh .
+COPY Script/httpcodes.sh .
 
 RUN chmod +x httpcodes.sh && useradd -u 10001 appuser && chown -R appuser:appuser /script
 

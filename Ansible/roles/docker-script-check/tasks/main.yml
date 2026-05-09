@@ -1,0 +1,86 @@
+---
+- name: Remove old check container
+  community.docker.docker_container:
+    name: "{{ docker_check_container_name }}"
+    state: absent
+    force_kill: true
+
+- name: Pull project from git for building
+  ansible.builtin.git:
+    repo: "https://github.com/Nuikut/HTTPStatusCodes"
+    dest: /tmp/ansible-testing
+    version: master
+    update: true
+    force: true
+  when: docker_check_build_image
+
+- name: Build Docker image for script
+  community.docker.docker_image:
+    name: "{{ docker_check_image_name }}"
+    tag: "{{ docker_check_image_tag }}"
+    source: build
+    build:
+      path: /tmp/ansible-testing
+      dockerfile: Dockerfile
+    force_source: true
+  when: docker_check_build_image
+
+- name: Pull Docker image for script check
+  community.docker.docker_image:
+    name: "nuikut/{{ docker_check_full_image_name }}"
+    source: pull
+  when: not docker_check_build_image
+
+- name: Run script in container
+  community.docker.docker_container:
+    name: "{{ docker_check_container_name }}"
+    image: "{{ docker_check_full_image_name }}"
+    state: started
+    detach: false
+    cleanup: false
+
+    cap_drop:
+      - ALL
+
+    security_opts:
+      - no-new-privileges:true
+
+    read_only: true
+
+    pids_limit: 4
+
+    memory: "8m"
+    memory_swap: "8m"
+
+    cpus: 0.5
+  register: docker_script_container_result
+  failed_when: false
+
+- name: Get container info
+  community.docker.docker_container_info:
+    name: "{{ docker_check_container_name }}"
+  register: docker_check_container_info
+
+- name: Show docker logs
+  ansible.builtin.debug:
+    msg: "{{ docker_script_container_result.container.Output | default('No docker logs captured') }}"
+
+- name: Check script exit code
+  ansible.builtin.assert:
+    that:
+      - docker_check_container_info.container.State.ExitCode == 0
+    fail_msg: >-
+      "Script failed inside container.
+      Exit code: {{ docker_check_container_info.container.State.ExitCode }}
+
+      Docker logs:
+      {{ docker_script_container_result.container.Output | default('No docker logs captured') }}"
+    success_msg: >-
+      "Script completed successfully.
+      Exit code: 0"
+
+- name: Remove check container
+  community.docker.docker_container:
+    name: "{{ docker_check_container_name }}"
+    state: absent
+    force_kill: true

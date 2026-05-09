@@ -1,0 +1,35 @@
+---
+- name: Ensure required packages are installed
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - git
+    state: present
+    update_cache: true
+  when: ansible_os_family == "Debian"
+
+- name: Add Docker APT repository
+  ansible.builtin.deb822_repository:
+    name: docker
+    types:
+      - deb
+    uris:
+      - "{{ docker_apt_repo_url }}"
+    suites:
+      - "{{ ansible_distribution_release }}"
+    components:
+      - stable
+    architectures:
+      - "{{ ansible_architecture | replace('x86_64', 'amd64') }}"
+    signed_by: "{{ docker_apt_key_url }}"
+    state: present
+    enabled: true
+  when: ansible_os_family == "Debian"
+
+- name: Install Docker packages
+  ansible.builtin.apt:
+    name: "{{ docker_packages }}"
+    state: present
+    update_cache: true
+  when: ansible_os_family == "Debian"

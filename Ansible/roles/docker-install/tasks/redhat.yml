@@ -1,0 +1,36 @@
+---
+- name: Add Docker repository for Fedora
+  ansible.builtin.yum_repository:
+    name: docker-ce-stable
+    description: Docker CE Stable - $basearch
+    baseurl: "{{ docker_fedora_repo_baseurl }}"
+    enabled: true
+    gpgcheck: true
+    gpgkey: "{{ docker_fedora_gpgkey }}"
+  when: ansible_distribution == "Fedora"
+
+- name: Add Docker repository for RHEL/CentOS
+  ansible.builtin.yum_repository:
+    name: docker-ce-stable
+    description: Docker CE Stable - $basearch
+    baseurl: "{{ docker_rhel_repo_baseurl }}"
+    enabled: true
+    gpgcheck: true
+    gpgkey: "{{ docker_rhel_gpgkey }}"
+  when:
+    - ansible_distribution == "RedHat"
+    - ansible_distribution != "Fedora"
+
+- name: Install Docker packages
+  ansible.builtin.dnf:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+      - git
+    state: present
+    update_cache: true
+  when:
+    - ansible_distribution in ["RedHat", "Fedora"]

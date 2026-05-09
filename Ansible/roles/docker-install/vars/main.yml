@@ -1,0 +1,16 @@
+---
+docker_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin
+
+docker_apt_repo_url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}"
+docker_apt_key_url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
+
+docker_fedora_repo_baseurl: https://download.docker.com/linux/fedora/$releasever/$basearch/stable
+docker_fedora_gpgkey: https://download.docker.com/linux/fedora/gpg
+
+docker_rhel_repo_baseurl: https://download.docker.com/linux/centos/$releasever/$basearch/stable
+docker_rhel_gpgkey: https://download.docker.com/linux/centos/gpg

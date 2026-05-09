@@ -1,0 +1,14 @@
+---
+#- name: Install Docker
+#  hosts: all
+#  become: true
+#  gather_facts: true
+#
+#  roles:
+#    - docker-install
+
+- name: Check script in a container
+  hosts: all
+
+  roles:
+    - docker-script-check

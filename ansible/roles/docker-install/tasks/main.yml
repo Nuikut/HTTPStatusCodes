@@ -1,0 +1,14 @@
+- name: Detect target OS
+  ansible.builtin.debug:
+    msg: "Target system: {{ ansible_distribution }} {{ ansible_distribution_version }} {{ ansible_architecture }}"
+
+- name: Install Docker on Debian/Ubuntu
+  ansible.builtin.include_tasks: debian.yml
+  when: ansible_os_family == "Debian"
+
+- name: Install Docker on Fedora/RHEL/CentOS
+  ansible.builtin.include_tasks: redhat.yml
+  when: ansible_os_family == "RedHat"
+
+- name: Run common Docker tasks
+  ansible.builtin.include_tasks: common.yml

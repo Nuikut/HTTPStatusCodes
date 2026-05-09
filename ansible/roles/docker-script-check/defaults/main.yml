@@ -1,0 +1,11 @@
+---
+docker_check_image_name: http-status-check
+docker_check_image_tag: latest
+docker_check_full_image_name: "{{ docker_check_image_name }}:{{ docker_check_image_tag }}"
+
+docker_check_container_name: script-check-container
+
+docker_check_build_image: false
+
+docker_check_build_context: "{{ playbook_dir }}/.."
+docker_check_dockerfile: "{{ playbook_dir }}/../Dockerfile"
